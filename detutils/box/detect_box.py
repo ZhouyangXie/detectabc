@@ -3,7 +3,7 @@ TODO
 '''
 import numpy as np
 
-from detectutils.box import BoxArray
+from detutils.box import BoxArray
 
 
 class DetectBoxArray(BoxArray):
@@ -84,38 +84,3 @@ class DetectBoxArray(BoxArray):
 
         return DetectBoxArray.from_conf_box(
                 self.class_name, *self[list(output_inds)])
-
-
-def test_detect_box():
-    '''
-    TODO
-    '''
-    boxes = BoxArray.from_iter(10, 10, [(0, 10, 0, 10), (10, 20, 10, 20)])
-    detect_boxes = DetectBoxArray.from_conf_box(
-        'class C', [1., 0.], boxes)
-
-    duplicate = detect_boxes.copy()
-    assert duplicate.class_name == detect_boxes.class_name
-
-    _, inner_boxes = detect_boxes[:]
-    duplicate = DetectBoxArray.from_conf_box(
-        'class C', [1., 0.], inner_boxes)
-    assert duplicate.class_name == detect_boxes.class_name
-
-    assert len(detect_boxes.filter(0.5)) == 1
-    assert detect_boxes.filter(0.5)[0].xmax == 10
-
-    detect_boxes = DetectBoxArray.from_conf_box(
-        'class C', [1., 0., 3., 2., -1.],
-        BoxArray.from_iter(
-            10, 10,
-            [(0, 1, 0, 3),
-             (0, 1, 0, 2),
-             (0, 5, 0, 5),
-             (0, 6, 0, 6),
-             (1, 1, 1, 2,)]))
-    nms_boxes = detect_boxes.nms(0.5)
-    assert len(nms_boxes) == 3
-    assert nms_boxes[0][0] == 3.
-    assert nms_boxes[1][0] == 1.
-    assert nms_boxes[2][0] == -1.

@@ -1,7 +1,7 @@
 '''
     TODO
 '''
-from detectutils.box import BoxArray
+from detutils.box import BoxArray
 
 
 class LabelBoxArray(BoxArray):
@@ -84,53 +84,3 @@ class LabelBoxArray(BoxArray):
         return cls.from_cls_box(class_names,
                                 BoxArray.from_iter(img_w, img_h, boxes, True),
                                 False)
-
-
-def test_label_box_array():
-    '''
-        unit test from VoC example
-    '''
-    label = {'annotation':
-             {'folder': 'VOC2012',
-              'filename': '2008_000008.jpg',
-              'source': {
-                  'database': 'The VOC2008 Database',
-                  'annotation': 'PASCAL VOC2008',
-                  'image': 'flickr'
-              },
-                 'size': {'width': '500',
-                          'height': '442',
-                          'depth': '3'},
-                 'segmented': '0',
-                 'object': [
-                  {'name': 'horse',
-                   'pose': 'Left',
-                   'truncated': '0',
-                   'occluded': '1',
-                   'bndbox': {'xmin': '53',
-                              'ymin': '87',
-                              'xmax': '471',
-                              'ymax': '420'},
-                   'difficult': '0'},
-                  {'name': 'person',
-                   'pose': 'Unspecified',
-                   'truncated': '1', 'occluded': '0',
-                   'bndbox': {'xmin': '158',
-                              'ymin': '44',
-                              'xmax': '289',
-                              'ymax': '167'},
-                   'difficult': '0'
-                   }
-              ]
-              }
-             }
-
-    obj = LabelBoxArray.from_voc(label)
-    duplicate = obj.copy()
-
-    assert obj.img_w == duplicate.img_w == 500
-    assert obj.img_h == duplicate.img_h == 442
-
-    assert obj.class_names == duplicate.class_names == ['horse', 'person']
-    assert obj['person'].xmin[0] == duplicate['person'].xmin[0] == 158.0
-    assert obj[0].ymax == duplicate[0].ymax == 420.

@@ -1,6 +1,7 @@
 import torch
 from torch.nn.functional import softplus, tanh
 
+
 class Mish(torch.nn.Module):
     def __init__(self):
         super().__init__()

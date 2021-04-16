@@ -186,10 +186,10 @@ class BoxArray(_BoxMixIn):
         return _gen()
 
     def __getitem__(self, i):
-        if isinstance(i, int):
+        if isinstance(i, (int, np.integer)):
             return _Box(self.img_w, self.img_h, self.xmin[i],
                         self.xmax[i], self.ymin[i], self.ymax[i])
-        else:
+        elif isinstance(i, (np.array, slice)):
             # i is slice-like, such as int array or boolean array
             return BoxArray(self.img_w, self.img_h,
                             self.xmin[i, ], self.xmax[i, ],
@@ -248,40 +248,3 @@ class BoxArray(_BoxMixIn):
         union_area[union_area <= 0] = 1
 
         return self.inter(target)/union_area
-
-
-def test_boxarray():
-    """
-        test BoxArray
-    """
-    boxes = np.array([[0, 1, 0, 1], [0, 2, 0, 3], [0, 1, 0, 2]])
-    box_arr = BoxArray.from_array(2, 2, boxes, True)
-
-    assert box_arr[2].to_xywh() == (0.5, 1., 1., 2)
-
-    assert -1e-5 < box_arr[0:2][1].xmax - box_arr[1:][0].xmax < 1e-5
-
-    assert all(box_arr.area() == np.array([1, 4, 2]))
-
-    iou_diffs = box_arr.iou(box_arr[2]) - np.array([0.5, 0.5, 1.])
-    assert all((iou_diffs < 1e-5) | (iou_diffs > -1e-5))
-
-    scale = 2
-    rescaled = box_arr.copy()
-    rescaled.rescale_to(scale*box_arr.img_w, scale*box_arr.img_h)
-    assert all(rescaled.area() == box_arr.area()*scale**2)
-
-    rotated = box_arr.copy()
-    rotated.rotate()
-    for box_a, box_b in zip(box_arr, rotated):
-        assert box_a.xmin == box_b.ymin
-        assert box_a.ymin == box_b.xmin
-        assert box_a.xmax == box_b.ymax
-        assert box_a.ymax == box_b.xmax
-
-    concat = box_arr + rotated
-    assert len(concat) == len(box_arr) + len(rotated)
-    assert concat[-1].xmin == rotated[-1].xmin
-    assert concat[-1].xmax == rotated[-1].xmax
-    assert concat[-1].ymin == rotated[-1].ymin
-    assert concat[-1].ymax == rotated[-1].ymax

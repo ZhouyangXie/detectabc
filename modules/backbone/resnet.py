@@ -7,6 +7,7 @@ from types import MethodType
 import torch
 import torchvision.models as models
 
+
 class ResNetBackbone(torch.nn.Module):
     def __init__(self, resnet):
         super().__init__()

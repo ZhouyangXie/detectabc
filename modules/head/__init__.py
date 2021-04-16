@@ -1,2 +1,2 @@
 from .yolo import Yolo
-from .yolov1 import YoloV1
+from .yolov3 import YoloV3

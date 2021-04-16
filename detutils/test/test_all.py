@@ -1,7 +1,8 @@
 import numpy as np
 
-from metrics import HitMetrics
-from box import BoxArray, DetectBoxArray, LabelBoxArray
+from detutils.metrics import HitMetrics
+from detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
+
 
 VOC_LABEL = {'annotation':
              {'folder': 'VOC2012',
@@ -61,7 +62,7 @@ DETECTION['classes']['dog']['boxes'] = BoxArray.from_iter(
 DETECTION['classes']['dog']['confs'] = [1]
 
 
-if __name__ == "__main__":
+def test_all():
     label = LabelBoxArray.from_voc(VOC_LABEL)
     for class_name in DETECTION['classes'].keys():
         DETECTION['classes'][class_name] = DetectBoxArray.from_conf_box(
