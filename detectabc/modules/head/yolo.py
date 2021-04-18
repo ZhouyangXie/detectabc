@@ -6,9 +6,9 @@ from abc import ABC, abstractmethod
 import torch
 import numpy as np
 
-from detutils.box import BoxArray, LabelBoxArray, DetectBoxArray
+from detectabc.detutils.box import BoxArray, LabelBoxArray, DetectBoxArray
 
-from modules.torch_utils import to_numpy
+from detectabc.modules.torch_utils import to_numpy
 
 
 class Yolo(ABC):

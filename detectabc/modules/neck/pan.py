@@ -1,4 +1,4 @@
-''' 
+'''
     Path Aggregation Network
     https://arxiv.org/abs/1803.01534
 '''

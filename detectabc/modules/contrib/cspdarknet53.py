@@ -8,7 +8,7 @@
 import torch
 import torch.nn as nn
 
-from modules.functional import Mish
+from detectabc.modules.functional import Mish
 
 
 class BasicConv(nn.Module):

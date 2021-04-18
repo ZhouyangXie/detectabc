@@ -3,7 +3,7 @@ TODO
 '''
 import numpy as np
 
-from detutils.box import BoxArray
+from .box import BoxArray
 
 
 class DetectBoxArray(BoxArray):

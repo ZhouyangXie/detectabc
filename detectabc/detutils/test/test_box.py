@@ -1,5 +1,5 @@
 import numpy as np
-from detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
+from detectabc.detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
 
 
 def test_boxarray():

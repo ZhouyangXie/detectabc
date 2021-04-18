@@ -1,8 +1,8 @@
 import torch.nn
 import numpy as np
 
-from detutils.box import BoxArray, LabelBoxArray, DetectBoxArray
-from modules.head import YoloV3
+from detectabc.detutils.box import BoxArray, LabelBoxArray, DetectBoxArray
+from detectabc.modules.head import YoloV3
 
 
 def test_yolov3_head():

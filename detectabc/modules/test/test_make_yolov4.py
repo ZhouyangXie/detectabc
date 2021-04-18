@@ -8,10 +8,10 @@ import torch
 import torch.nn as nn
 from torchvision.ops import FeaturePyramidNetwork
 
-from detutils.box import BoxArray
+from detectabc.detutils.box import BoxArray
 
-from modules.contrib import CSPDarkNet53
-from modules.neck import PathAggregationNetwork
+from detectabc.modules.contrib import CSPDarkNet53
+from detectabc.modules.neck import PathAggregationNetwork
 
 
 class YoloV4(nn.Module):

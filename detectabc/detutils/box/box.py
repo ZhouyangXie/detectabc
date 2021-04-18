@@ -189,11 +189,15 @@ class BoxArray(_BoxMixIn):
         if isinstance(i, (int, np.integer)):
             return _Box(self.img_w, self.img_h, self.xmin[i],
                         self.xmax[i], self.ymin[i], self.ymax[i])
-        elif isinstance(i, (np.array, slice)):
+        elif isinstance(i, (list, np.ndarray, slice)):
+            if isinstance(i, list):
+                i = np.array(i, dtype=np.int)
             # i is slice-like, such as int array or boolean array
             return BoxArray(self.img_w, self.img_h,
                             self.xmin[i, ], self.xmax[i, ],
                             self.ymin[i, ], self.ymax[i, ], False)
+        else:
+            raise TypeError
 
     def inter(self, target: _Box):
         '''

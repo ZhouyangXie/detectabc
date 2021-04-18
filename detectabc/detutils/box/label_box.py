@@ -1,14 +1,13 @@
 '''
     TODO
 '''
-from detutils.box import BoxArray
+from .box import BoxArray
 
 
 class LabelBoxArray(BoxArray):
     '''
         storing bounding box labels of an image(coordinates and class names)
     '''
-
     def __init__(self, class_names, *args, **kwargs) -> None:
         '''
         args:

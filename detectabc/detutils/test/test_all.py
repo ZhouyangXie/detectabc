@@ -1,7 +1,7 @@
 import numpy as np
 
-from detutils.metrics import HitMetrics
-from detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
+from detectabc.detutils.metrics import HitMetrics
+from detectabc.detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
 
 
 VOC_LABEL = {'annotation':
@@ -84,4 +84,5 @@ def test_all():
         else:
             APs[class_name] = 0
 
-    print(APs)
+    assert APs['person'] == 1/3
+    assert APs['horse'] == 0.

@@ -1,5 +1,5 @@
 import numpy as np
-from detutils.metrics import HitMetrics
+from detectabc.detutils.metrics import HitMetrics
 
 
 def test_hit_metrics():
