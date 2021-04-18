@@ -194,6 +194,11 @@ class Yolo(ABC):
             if labels are not given
         """
         # make grid according to the input
+        if len(prediction.shape) == 3:
+            grid_w, grid_h, _ = prediction.shape
+            prediction = prediction.reshape(
+                (grid_w, grid_h, self.num_anchor, -1))
+
         grid_w, grid_h, pred_num_anchor, pred_vector_len = prediction.shape
         assert pred_num_anchor == self.num_anchor
         assert pred_vector_len == (5 + self.num_class)
