@@ -1,6 +1,7 @@
 '''
     extract the ImageNet trained backbone of ResNet
-    adapted acoording to https://pytorch.org/docs/stable/_modules/torchvision/models/resnet.html
+    adapted acoording to:
+        https://pytorch.org/docs/stable/_modules/torchvision/models/resnet.html
 '''
 from types import MethodType
 
@@ -13,7 +14,8 @@ class ResNetBackbone(torch.nn.Module):
         super().__init__()
         assert isinstance(resnet, models.ResNet)
         self.resnet = resnet
-        self.resnet._forward_impl = MethodType(ResNetBackbone._part_forward_impl, self.resnet)
+        self.resnet._forward_impl = MethodType(
+            ResNetBackbone._part_forward_impl, self.resnet)
 
     def forward(self, x):
         return self.resnet(x)

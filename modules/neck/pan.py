@@ -1,3 +1,7 @@
+''' 
+    Path Aggregation Network
+    https://arxiv.org/abs/1803.01534
+'''
 import torch.nn as nn
 
 
@@ -20,7 +24,7 @@ class PathAggregationNetwork(nn.Module):
         self.down_convs = nn.ModuleList()
         self.smooth_convs = nn.ModuleList()
 
-        for i in range(1, len(in_channels_list) - 1):
+        for i in range(1, len(in_channels_list)):
             self.down_convs.append(
                 PathAggregationNetwork._make_downsample_conv(
                     out_channels_list[i-1], in_channels_list[i]
@@ -69,7 +73,7 @@ class PathAggregationNetwork(nn.Module):
         for idx in range(len(x_list) - 1):
             last_result = results[-1]
             downsampled = self.down_convs[idx](last_result)
-            feature_sum = x_list[idx] + downsampled
+            feature_sum = x_list[idx + 1] + downsampled
             smoothed = self.smooth_convs[idx](feature_sum)
             results.append(smoothed)
 

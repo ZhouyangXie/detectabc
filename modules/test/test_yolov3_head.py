@@ -5,7 +5,7 @@ from detutils.box import BoxArray, LabelBoxArray, DetectBoxArray
 from modules.head import YoloV3
 
 
-def test_yolov3():
+def test_yolov3_head():
     anchors = BoxArray.from_array(
         img_w=224, img_h=224,
         array=np.array([[0, 16, 0, 16], [0, 8, 0, 16], [0, 16, 0, 8]])

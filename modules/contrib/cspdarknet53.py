@@ -94,7 +94,7 @@ class CSPDarkNet53(nn.Module):
             input_channel, inplanes, kernel_size=3, stride=1)
         self.stages = nn.ModuleList([
             Resblock_body(
-                self.inplanes, channels[0], layers[0], first=True),
+                inplanes, channels[0], layers[0], first=True),
             Resblock_body(
                 channels[0], channels[1], layers[1], first=False),
             Resblock_body(

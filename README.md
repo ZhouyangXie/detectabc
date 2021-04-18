@@ -9,3 +9,5 @@ yolo scales:
     noobj_scale: float = 0.5,
     class_scale: float = 1.0,
     objective_conf_thre: float = 0.5
+
+Develop YOLOv4：MAKE SURE THAT IMAGES ARE NOT TRANSPOSED AFTER DATA LOADING, SHOULD BE ALIGNED WITH BOX
