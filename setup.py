@@ -9,8 +9,8 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'numpy',
-        'torch>=1.7.0',
-        'torchvision>=0.8.0'
+        'torch>=1.5.0',
+        'torchvision>=0.6.0'
     ],
     tests_require=[
         'pytest>=3.0',
