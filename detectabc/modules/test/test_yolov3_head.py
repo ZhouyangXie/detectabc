@@ -54,10 +54,10 @@ def test_yolov3_head():
     assert float(class_loss) <= 1e-10
 
     detect = yolo_head(pred)
-    assert isinstance(detect, list) and len(detect) == 2
-    assert isinstance(detect[0], DetectBoxArray)
-    best_shot_ind = np.argmax(detect[0].confs)
-    best_score, best_box = detect[0][best_shot_ind]
+    assert isinstance(detect, dict) and len(detect) == 2
+    assert isinstance(detect['class A'], DetectBoxArray)
+    best_shot_ind = np.argmax(detect['class A'].confs)
+    best_score, best_box = detect['class A'][best_shot_ind]
     best_box.rescale_to(224, 224)
     assert best_score == 1.0
     assert [np.round(c) for c in [

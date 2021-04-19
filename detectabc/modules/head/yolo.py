@@ -134,13 +134,13 @@ class Yolo(ABC):
         # mask against low-conf boxes
         objective_conf_mask = (objective_conf >= self.pred_objectness_thre)
 
-        detect_boxes = []
+        detect_boxes = {}
         for i, class_name in enumerate(self.class_names):
             # mask against other classes
             anchor_class_mask = (anchor_class_ind == i)
             pred_box_mask = anchor_class_mask & objective_conf_mask
 
-            detect_boxes.append(DetectBoxArray(
+            detect_boxes[class_name] = DetectBoxArray(
                 class_name,
                 pred_box_conf[pred_box_mask, ].reshape(-1),
                 self.grid_w, self.grid_h,
@@ -148,7 +148,7 @@ class Yolo(ABC):
                 xmax[pred_box_mask, ].reshape(-1),
                 ymin[pred_box_mask, ].reshape(-1),
                 ymax[pred_box_mask, ].reshape(-1)
-            ))
+            )
 
         return detect_boxes
 
@@ -195,13 +195,18 @@ class Yolo(ABC):
         """
         # make grid according to the input
         if len(prediction.shape) == 3:
-            grid_w, grid_h, _ = prediction.shape
+            # given by model inference
+            _, grid_w, grid_h = prediction.shape
             prediction = prediction.reshape(
-                (grid_w, grid_h, self.num_anchor, -1))
-
-        grid_w, grid_h, pred_num_anchor, pred_vector_len = prediction.shape
-        assert pred_num_anchor == self.num_anchor
-        assert pred_vector_len == (5 + self.num_class)
+                (self.num_anchor, -1, grid_w, grid_h))
+            prediction = prediction.permute(2, 3, 0, 1)
+            assert prediction.shape[-1] == 5 + self.num_class
+        elif len(prediction.shape) == 4:
+            grid_w, grid_h, pred_num_anchor, pred_vector_len = prediction.shape
+            assert pred_num_anchor == self.num_anchor
+            assert pred_vector_len == 5 + self.num_class
+        else:
+            raise ValueError
 
         # adjust grid and cell offset to the input
         if (grid_w, grid_h) != (self.grid_w, self.grid_h):

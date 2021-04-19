@@ -105,6 +105,8 @@ class CSPDarkNet53(nn.Module):
                 channels[3], channels[4], layers[4], first=False)
         ])
 
+        self._initialize_weights()
+
     def forward(self, x):
         x = self.conv1(x)
         x = self.stages[0](x)
@@ -113,3 +115,13 @@ class CSPDarkNet53(nn.Module):
         out_mid = self.stages[3](out_low)
         out_high = self.stages[4](out_mid)
         return out_low, out_mid, out_high
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                m.weight.data.normal_(0, 0.01)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif isinstance(m, nn.BatchNorm2d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()

@@ -12,21 +12,22 @@ class Conv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1):
         super(Conv, self).__init__()
 
-        self.conv = nn.Sequential(
-            nn.Conv2d(
+        self.conv = nn.Conv2d(
                 in_channels,
                 out_channels,
                 kernel_size,
                 stride,
                 kernel_size // 2,
                 bias=False,
-            ),
-            nn.BatchNorm2d(out_channels),
-            nn.LeakyReLU(),
-        )
+            )
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.act = nn.LeakyReLU()
 
     def forward(self, x):
-        return self.conv(x)
+        x = self.conv(x)
+        x = self.bn(x)
+        out = self.act(x)
+        return out
 
 
 class SpatialPyramidPooling(nn.Module):

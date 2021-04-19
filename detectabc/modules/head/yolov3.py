@@ -69,11 +69,13 @@ class YoloV3(Yolo):
 
         # compute the two loss funcs
         obj_loss = mse_loss(
-            positives, torch.ones(positives.shape, device=self.device),
-            reduction='sum')
+            positives, torch.ones(
+                positives.shape, device=self.device, dtype=torch.float32),
+            reduction='mean')
         noobj_loss = mse_loss(
-            negatives, torch.zeros(negatives.shape, device=self.device),
-            reduction='sum')
+            negatives, torch.zeros(
+                negatives.shape, device=self.device, dtype=torch.float32),
+            reduction='mean')
 
         return obj_loss, noobj_loss
 
@@ -85,18 +87,18 @@ class YoloV3(Yolo):
         anchors_iou = anchors_iou.reshape((num_target, -1))
         flatten_responsible_inds = np.argmax(anchors_iou, axis=1)
 
-        class_loss = YoloV3._box_loss(
+        coord_loss = YoloV3._box_loss(
             *[
                 pcoord.reshape((-1,))[flatten_responsible_inds, ]
                 for pcoord in pred_coords
             ],
             *[
-                torch.tensor(tcoord, device=self.device)
+                torch.tensor(tcoord, device=self.device, dtype=torch.float32)
                 for tcoord in label_coords
             ]
         )
 
-        return class_loss
+        return coord_loss
 
     def _get_class_loss(
             self, class_conf, label_class_inds,
@@ -117,7 +119,8 @@ class YoloV3(Yolo):
             matched_label_inds = anchor_ind == flatten_responsible_inds
             target_labels = label_class_inds[matched_label_inds]
 
-            t_class_score = torch.zeros(self.num_class, device=self.device)
+            t_class_score = torch.zeros(
+                self.num_class, device=self.device, dtype=torch.float32)
             t_class_score[target_labels] = 1
             p_class_score = class_conf[anchor_ind]
             class_loss += YoloV3._class_loss(p_class_score, t_class_score)
@@ -129,11 +132,11 @@ class YoloV3(Yolo):
         p_xmin, p_xmax, p_ymin, p_ymax,
         t_xmin, t_xmax, t_ymin, t_ymax
     ):
-        return mse_loss(p_xmin, t_xmin, reduction='sum') + \
-            mse_loss(p_xmax, t_xmax, reduction='sum') + \
-            mse_loss(p_ymin, t_ymin, reduction='sum') + \
-            mse_loss(p_ymax, t_ymax, reduction='sum')
+        return mse_loss(p_xmin, t_xmin, reduction='mean') + \
+            mse_loss(p_xmax, t_xmax, reduction='mean') + \
+            mse_loss(p_ymin, t_ymin, reduction='mean') + \
+            mse_loss(p_ymax, t_ymax, reduction='mean')
 
     @staticmethod
     def _class_loss(p_score, t_score):
-        return mse_loss(p_score, t_score, reduction='sum')
+        return mse_loss(p_score, t_score, reduction='mean')
