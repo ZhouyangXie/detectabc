@@ -84,3 +84,15 @@ class DetectBoxArray(BoxArray):
 
         return DetectBoxArray.from_conf_box(
                 self.class_name, *self[list(output_inds)])
+
+    def __add__(self, boxarr):
+        assert self.class_name == boxarr.class_name
+
+        boxarr = boxarr.copy()
+        boxarr.rescale_to(self.img_w, self.img_h)
+        confs = np.concatenate((self.confs, boxarr.confs))
+
+        new_boxarr = super().__add__(boxarr)
+
+        return DetectBoxArray(self.class_name, confs, self.img_w, self.img_h,
+            new_boxarr.xmin, new_boxarr.xmax, new_boxarr.ymin, new_boxarr.ymax)

@@ -73,6 +73,26 @@ def test_detect_box():
     assert nms_boxes[1][0] == 1.
     assert nms_boxes[2][0] == -1.
 
+    detect_boxes_A = DetectBoxArray.from_conf_box(
+        'class C', [1., 0., ],
+        BoxArray.from_iter(
+            10, 10,
+            [
+             (0, 6, 0, 6),
+             (1, 1, 1, 2,)]))
+    detect_boxes_B = DetectBoxArray.from_conf_box(
+        'class C', [3., 2., -1.],
+        BoxArray.from_iter(
+            10, 10,
+            [(0, 1, 0, 3),
+             (0, 1, 0, 2),
+             (0, 5, 0, 5)]))
+    detect_boxes_AB = detect_boxes_A + detect_boxes_B
+    assert len(detect_boxes_AB) == len(detect_boxes_A) + len(detect_boxes_B)
+    assert detect_boxes_AB.confs[0] == 3.
+    assert detect_boxes_AB.confs[-1] == -1.
+    assert detect_boxes_AB.ymax[2] == 6
+
 
 def test_label_box_array():
     '''

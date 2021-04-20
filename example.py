@@ -78,7 +78,7 @@ def run_model():
         ]))
     ]
 
-    device = torch.device('cuda:0')
+    device = torch.device('cuda:5')
     model = YoloV4(
         num_classes=len(_class_names),
         nums_anchors=[len(a) for a in anchors_arr]
@@ -147,6 +147,7 @@ def run_model():
                     coord_loss_scale * coord_loss +
                     class_loss_scale * class_loss)
 
+        loss = loss/batch_size
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
@@ -185,7 +186,7 @@ def run_model():
                     APs[class_name] = 0.
                     continue
 
-                shots.nms(iou=0.5)
+                shots.nms(0.5)
                 hits = []
                 for target in targets:
                     ious = shots.iou(target)
