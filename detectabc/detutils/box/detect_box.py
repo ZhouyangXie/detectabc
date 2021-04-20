@@ -4,6 +4,7 @@ TODO
 import numpy as np
 
 from .box import BoxArray
+from .contrib.nms import torchvision_nms
 
 
 class DetectBoxArray(BoxArray):
@@ -63,10 +64,17 @@ class DetectBoxArray(BoxArray):
         '''
         return super().__getitem__(self.confs > np.float32(conf_thre))
 
-    def nms(self, iou_thre: float):
+    def nms(self, iou_thre:float):
+        kept_inds = torchvision_nms(self, iou_thre)
+        return DetectBoxArray.from_conf_box(
+            self.class_name,
+            *self[list(kept_inds)])
+
+    def _my_nms(self, iou_thre: float):
         '''
             return the boxes after non-maximum suppression
         '''
+        raise DeprecationWarning('use self.nms for speed')
         rest_inds = set(range(len(self)))
         output_inds = set()
         while len(rest_inds) > 0:

@@ -15,6 +15,7 @@ def to_tensor(ndarray: np.array, device: str = 'cpu'):
         format = torch.tensor
     else:
         format = torch.cuda.tensor
-        return format(ndarray.astype(np.float32),
-                      dtype=ndarray.dtype,
+    
+    return format(ndarray.astype(np.float32),
+                      dtype=torch.float32,
                       device=device)
