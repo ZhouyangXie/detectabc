@@ -65,6 +65,7 @@ class YoloV3(Yolo):
         positives = objective_conf[positive_inds, ]
         # choose those has low iou with any label as objectness=0
         negative_inds = anchors_iou.min(axis=0) < self.loss_objectness_thre
+        negative_inds[positive_inds] = False
         negatives = objective_conf[negative_inds, ]
 
         # compute the two loss funcs
@@ -72,6 +73,7 @@ class YoloV3(Yolo):
             positives, torch.ones(
                 positives.shape, device=self.device, dtype=torch.float32),
             reduction='mean')
+
         noobj_loss = binary_cross_entropy(
             negatives, torch.zeros(
                 negatives.shape, device=self.device, dtype=torch.float32),
