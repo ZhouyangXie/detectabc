@@ -2,7 +2,7 @@
 TODO
 '''
 import torch
-from torch.nn.functional import mse_loss
+from torch.nn.functional import mse_loss, binary_cross_entropy
 import numpy as np
 
 from .yolo import Yolo
@@ -68,11 +68,11 @@ class YoloV3(Yolo):
         negatives = objective_conf[negative_inds, ]
 
         # compute the two loss funcs
-        obj_loss = mse_loss(
+        obj_loss = binary_cross_entropy(
             positives, torch.ones(
                 positives.shape, device=self.device, dtype=torch.float32),
             reduction='mean')
-        noobj_loss = mse_loss(
+        noobj_loss = binary_cross_entropy(
             negatives, torch.zeros(
                 negatives.shape, device=self.device, dtype=torch.float32),
             reduction='mean')
@@ -132,11 +132,20 @@ class YoloV3(Yolo):
         p_xmin, p_xmax, p_ymin, p_ymax,
         t_xmin, t_xmax, t_ymin, t_ymax
     ):
-        return mse_loss(p_xmin, t_xmin, reduction='mean') + \
-            mse_loss(p_xmax, t_xmax, reduction='mean') + \
-            mse_loss(p_ymin, t_ymin, reduction='mean') + \
-            mse_loss(p_ymax, t_ymax, reduction='mean')
+        t_area = (t_xmax - t_xmin) * (t_ymax - t_ymin)
+        p_area = (p_xmax - p_xmin) * (p_ymax - p_ymin)
+        inter_xmin = torch.max(t_xmin, p_xmin)
+        inter_xmax = torch.min(t_xmax, p_xmax)
+        inter_ymin = torch.max(t_ymin, p_ymin)
+        inter_ymax = torch.min(t_ymax, p_ymax)
+        inter_w = torch.clamp(inter_xmax - inter_xmin, min=0)
+        inter_h = torch.clamp(inter_ymax - inter_ymin, min=0)
+        inter_area = inter_w * inter_h
+        ious = inter_area / (t_area + p_area - inter_area)
+        ious = torch.clamp(ious, min=0, max=1)
+        return (1 - ious).sum()
+
 
     @staticmethod
     def _class_loss(p_score, t_score):
-        return mse_loss(p_score, t_score, reduction='mean')
+        return binary_cross_entropy(p_score, t_score, reduction='mean')
