@@ -57,29 +57,20 @@ class YoloV3(Yolo):
         num_target, _, _, _ = anchors_iou.shape
 
         # flatten the last 3 dims for easier indexing
-        anchors_iou = anchors_iou.reshape((num_target, -1))
+        anchors_iou = anchors_iou.reshape((num_target, -1))        
         objective_conf = objective_conf.reshape((-1))
 
-        # only choose the best for each target as objectness=1
-        positive_inds = np.argmax(anchors_iou, axis=1)
-        positives = objective_conf[positive_inds, ]
-        # choose those has low iou with any label as objectness=0
-        negative_inds = anchors_iou.min(axis=0) < self.loss_objectness_thre
-        negative_inds[positive_inds] = False
-        negatives = objective_conf[negative_inds, ]
+        high_objectness_inds = anchors_iou.max(axis=0) >= self.loss_objectness_thre
+
+        target = torch.zeros(objective_conf.shape, device=self.device, dtype=torch.float32)
+        target[high_objectness_inds,] = 1.
 
         # compute the two loss funcs
         obj_loss = binary_cross_entropy(
-            positives, torch.ones(
-                positives.shape, device=self.device, dtype=torch.float32),
+            objective_conf, target,
             reduction='mean')
 
-        noobj_loss = binary_cross_entropy(
-            negatives, torch.zeros(
-                negatives.shape, device=self.device, dtype=torch.float32),
-            reduction='mean')
-
-        return obj_loss, noobj_loss
+        return obj_loss
 
     def _get_coord_loss(
             self, pred_coords, label_coords,

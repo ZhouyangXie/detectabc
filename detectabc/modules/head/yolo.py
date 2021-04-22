@@ -256,7 +256,7 @@ class Yolo(ABC):
             (len(labels), *self._box_shape))
 
         # compute objective loss
-        obj_loss, nonobj_loss = self._get_objective_loss(
+        obj_loss = self._get_objective_loss(
             objective_conf, anchors_iou, preds_iou)
 
         # compute coordinate loss
@@ -277,7 +277,7 @@ class Yolo(ABC):
         # to avoid misuse
         self.device = None
 
-        return obj_loss, nonobj_loss, coord_loss, class_loss
+        return obj_loss, coord_loss, class_loss
 
     @abstractmethod
     def _interpret_tensor(

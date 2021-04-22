@@ -42,12 +42,9 @@ def test_yolov3_head():
     pred[0][0][2][6] = -100
 
     # let's rock
-    obj_loss, nonobj_loss, coord_loss, class_loss = yolo_head(pred, labels)
+    obj_loss, coord_loss, class_loss = yolo_head(pred, labels)
     assert isinstance(obj_loss, torch.Tensor)
     assert float(obj_loss) <= 1e-10
-    assert isinstance(nonobj_loss, torch.Tensor)
-    # this aasertation may be broken due to the random input tensor
-    assert 35 <= float(nonobj_loss) <= 45
     assert isinstance(coord_loss, torch.Tensor)
     assert 0.00389 <= float(coord_loss) <= 0.00391
     assert isinstance(class_loss, torch.Tensor)
