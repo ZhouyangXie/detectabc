@@ -61,9 +61,11 @@ class YoloV3(Yolo):
         objective_conf = objective_conf.reshape((-1))
 
         high_objectness_inds = anchors_iou.max(axis=0) >= self.loss_objectness_thre
+        best_objectness_inds = anchors_iou.argmax(axis=1)
 
         target = torch.zeros(objective_conf.shape, device=self.device, dtype=torch.float32)
         target[high_objectness_inds,] = 1.
+        target[best_objectness_inds,] = 1.
 
         # compute the two loss funcs
         obj_loss = binary_cross_entropy(
