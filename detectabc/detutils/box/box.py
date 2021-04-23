@@ -77,8 +77,10 @@ class _Box(_BoxMixIn):
         self.xmax = float(args[3])
         self.ymin = float(args[4])
         self.ymax = float(args[5])
-        assert self.img_w >= self.xmax >= self.xmin >= 0
-        assert self.img_h >= self.ymax >= self.ymin >= 0
+        # assert self.img_w >= self.xmax >= self.xmin >= 0
+        # assert self.img_h >= self.ymax >= self.ymin >= 0
+        assert self.xmax >= self.xmin
+        assert self.ymax >= self.ymin
 
     def copy(self):
         '''
@@ -96,7 +98,7 @@ class BoxArray(_BoxMixIn):
     def __init__(self, img_w: float, img_h: float,
                  xmin: np.array, xmax: np.array,
                  ymin: np.array, ymax: np.array,
-                 truncate=True) -> None:
+                 truncate=False) -> None:
         '''
         args:
             img_w, img_h: the image that the boxes belong to
@@ -120,9 +122,9 @@ class BoxArray(_BoxMixIn):
 
         if truncate:
             self._truncate()
-        else:
-            assert all(xmin >= 0) and all(xmax <= img_w)
-            assert all(ymin >= 0) and all(ymax <= img_h)
+        # else:
+        #     assert all(xmin >= 0) and all(xmax <= img_w)
+        #     assert all(ymin >= 0) and all(ymax <= img_h)
 
         self._i = None  # iter count
 
