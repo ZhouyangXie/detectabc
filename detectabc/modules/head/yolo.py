@@ -247,37 +247,29 @@ class Yolo(ABC):
                                to_numpy(ymax).reshape(-1))
         assert len(pred_boxarr) == self.grid_w * self.grid_h * self.num_anchor
 
+        # rescale label boxes to fit the output
         labels.rescale_to(self.grid_w, self.grid_h)
-
-        # IoU of anchor/predictions with the ground-truth
-        preds_iou = Yolo.get_ious(pred_boxarr, labels).reshape(
-            (len(labels), *self._box_shape))
-        anchors_iou = Yolo.get_ious(self.anchors, labels).reshape(
-            (len(labels), *self._box_shape))
 
         # compute objective loss
         obj_loss = self._get_objective_loss(
-            objective_conf, anchors_iou, preds_iou)
+            objective_conf, labels)
 
         # compute coordinate loss
-        coord_loss = self._get_coord_loss(
-            pred_coords=(xmin, xmax, ymin, ymax),
-            label_coords=(labels.xmin, labels.xmax, labels.ymin, labels.ymax),
-            anchors_iou=anchors_iou,
-            preds_iou=preds_iou
+        cent_loss, size_loss = self._get_coord_loss(
+            xmin, xmax, ymin, ymax, labels,
         )
 
         # compute classification loss
         label_class_inds = [
             self.class_name2ind[cn] for cn in labels.class_names]
         class_loss = self._get_class_loss(
-            class_conf, label_class_inds, anchors_iou, preds_iou,
+            class_conf, labels, label_class_inds
         )
 
         # to avoid misuse
         self.device = None
 
-        return obj_loss, coord_loss, class_loss
+        return obj_loss, cent_loss, size_loss, class_loss
 
     @abstractmethod
     def _interpret_tensor(
@@ -290,16 +282,14 @@ class Yolo(ABC):
 
     @abstractmethod
     def _get_coord_loss(
-            self, pred_coords, label_coords,
-            anchors_iou, preds_iou):
+            self, xmin, xmax, ymin, ymax, labels):
         pass
 
     @abstractmethod
-    def _get_objective_loss(self, objective_conf, anchors_iou, preds_iou):
+    def _get_objective_loss(self, objective_conf, labels):
         pass
 
     @abstractmethod
     def _get_class_loss(
-            self, class_conf, label_class_inds,
-            anchors_iou, preds_iou):
+            self, class_conf, labels, label_class_inds):
         pass
