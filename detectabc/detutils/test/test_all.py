@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.core.defchararray import array
 
 from detectabc.detutils.metrics import HitMetrics
 from detectabc.detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
