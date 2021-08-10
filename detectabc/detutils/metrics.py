@@ -9,122 +9,92 @@ class HitMetrics:
         metrics based on hits of predictions on multi-targets,
         such as multi-class classification or object detection
     '''
+    def __init__(self):
+        self.empty()
 
-    def __init__(self, hits):
+    def empty(self):
+        self._confs = np.zeros((0,), dtype=np.float)
+        self._tp_hits = np.zeros((0,), dtype=np.bool)
+        self._num_targets = 0
+        self._num_instances = 0
+        self._recalls = []
+
+    def add_instance(self, hits, confs):
         '''
+        add the predictions for the targets in one instance
+        (AP is computed across targets, AR is computed across instances)
+
         args:
             hits: np.array dtype=bool
-                hits[i][j] as a bool is whether prediction i hits target j
-                hits should have been sorted by confidence score if any
-                duplicate hits on same targets will be removed
+            hits[i][j] as a bool is whether prediction i hits target j
+            hits should have been sorted by confidence score if any
+            duplicate hits on same targets will be removed
+            confs: np.array dtype=float
+            confs[i] is the confidence for the i-th prediction
         '''
-        self.num_target = hits.shape[1]
+        assert hits.ndim == 2 and hits.dtype == np.bool
+        assert confs.ndim == 1
+        assert len(hits) == len(confs)
+        confs = confs.astype(np.float64)
 
-        # whether the i-th prediction(duplicate-removed) hits a target
-        self._hit_any = []
-        # how many targets are hit at or before
-        # the i-th prediction(duplicated-removed)
-        self._num_hit = []
-        # whether this prediction hits a target's
-        # been hit before the i-th prediction
-        self._duplicate_hit = []
+        # how many targets in this instance
+        num_targets = hits.shape[1]
+        # a running variable whether the j-th target has been hit
+        has_hit = np.zeros((num_targets,), dtype=bool)
 
-        has_hit = np.array([False]*self.num_target)
-        for row in hits:
-            self._duplicate_hit.append(
-                True if all(has_hit == (has_hit | row)) and any(row)
-                else False)
+        # index of non-duplicate hit in hits' rows
+        valid_hits_ind = []
+        # whether the corresponding hit in valid_hits_ind if tp or fp
+        valid_tp_hits = []
+
+        for i, row in enumerate(hits):
+            if row.any():
+                # hit at least one target
+                if has_hit[row].all():
+                    # a duplicate hit
+                    continue
+                else:
+                    # if a new target is hit
+                    valid_tp_hits.append(True)
+            else:
+                # no target is hit, a false positive hit
+                valid_tp_hits.append(False)
+
+            valid_hits_ind.append(i)
             has_hit |= row
-            self._hit_any.append(True if any(row) else False)
-            self._num_hit.append(np.count_nonzero(has_hit))
 
-        self.num_pred = len(self._hit_any)
+        # new hits to be added
+        new_confs = confs[valid_hits_ind]
+        new_tp_hits = np.array(valid_tp_hits, dtype=np.bool)
 
-    def precision(self, remove_duplicate=False):
-        '''
-            return:
-                a list of float
-                the i-th stands for the precision of top i predictions
-        '''
-        if remove_duplicate:
-            hit_any = [h for i, h in enumerate(self._hit_any)
-                       if not self._duplicate_hit[i]]
+        self._num_targets += num_targets
+        self._num_instances += 1
+        self._recalls.append(has_hit.mean())
+        self._confs = np.concatenate((self._confs, new_confs))
+        self._tp_hits = np.concatenate((self._tp_hits, new_tp_hits))
+
+    def average_recall(self):
+        if self._num_instances <= 0:
+            return None
         else:
-            hit_any = self._hit_any
+            return np.array(self._recalls).mean()
 
-        return [hit_any[:i+1].count(True)/(i+1)
-                for i, n in enumerate(hit_any)]
+    def average_precision(self):
+        # sort all hits(across instances) by confidence
+        sorted_hits = self._tp_hits[np.argsort(self._confs)]
 
-    def recall(self, remove_duplicate=False):
-        '''
-            return:
-                a list of float
-                the i-th stands for the recall of top i predictions
-        '''
-        if remove_duplicate:
-            num_hit = [h for i, h in enumerate(self._num_hit)
-                       if not self._duplicate_hit[i]]
-        else:
-            num_hit = self._num_hit
+        # compute cumulative precision and recall
+        precision = np.cumsum(sorted_hits)/(np.arange(len(sorted_hits)) + 1)
 
-        return [b/self.num_target for i, b in enumerate(num_hit)]
+        # sample points to compute AUC are the tp hits
+        precisions = precision[self._tp_hits]
+        for i in range(len(precisions)):
+            precisions[i] = precisions[i:].max()
 
-    def fscore(self, beta=1.0):
-        '''
-            return:
-                a list of float
-                the i-th stands for the fscore of top i predictions
-        '''
-        precision, recall = self.precision(), self.recall()
-        scale = beta**2
-        return [(1+scale)*p*r/(p*scale+r) if r > 0 else 0
-                for p, r in zip(precision, recall)]
+        # add un-recalled targets
+        num_missed_targets = self._num_targets - self._tp_hits.sum()
+        precisions = np.concatenate(
+            (precisions, np.zeros(num_missed_targets))
+        )
 
-    def average_precision(self, method='auc', sample: int = 101):
-        '''
-            AP(Average Precision)
-            args:
-                method: if use auc(area under curve),
-                    use precisions as sampling point;
-                    if use interp(interpolation),
-                    use arg sample.
-                sample: number of sampling points.
-        '''
-        precision, recall = self.precision(True), self.recall(True)
-        max_precision = [max(precision[i:]) for i, _ in enumerate(precision)]
-
-        if method == 'auc':
-            # every max-precision drop is a sample point
-            curve = [(0, 1)] + list(zip(recall, max_precision)) + [(1, 0)]
-            area = [(r1-r0)*min(p1, p0)
-                    for (r0, p0), (r1, p1) in zip(curve[:-1], curve[1:])]
-            return sum(area)
-
-        elif method == 'interp':
-            assert sample > 1
-            step = 1/(sample-1)
-
-            curve = list(zip(recall, max_precision))
-            area = [0]
-            # sample the min of an interval
-            for r_thre in np.arange(1, 0, -step):
-                sampled_p = [p for r, p in curve
-                             if r_thre >= r > r_thre-step]
-                area.append(
-                    max(sampled_p) if len(sampled_p) > 0 else max(area))
-
-            # -1 because of the initial place-holding 0
-            return sum(area)/(len(area)-1)
-
-        else:
-            raise ValueError(f'invalid AP computation method \'{method}\'')
-
-    def average_recall(self, top_n: int = 1) -> float:
-        '''
-            AR(Average Recall) of top_n predictions
-        '''
-        assert top_n > 0
-        if top_n > self.num_pred:
-            top_n = self.num_pred
-
-        return sum(self.recall()[:top_n])/top_n
+        return precisions.mean()

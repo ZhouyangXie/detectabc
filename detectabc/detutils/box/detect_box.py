@@ -64,7 +64,7 @@ class DetectBoxArray(BoxArray):
         '''
         return super().__getitem__(self.confs > np.float32(conf_thre))
 
-    def nms(self, iou_thre:float):
+    def nms(self, iou_thre: float):
         kept_inds = torchvision_nms(self, iou_thre)
         return DetectBoxArray.from_conf_box(
             self.class_name,

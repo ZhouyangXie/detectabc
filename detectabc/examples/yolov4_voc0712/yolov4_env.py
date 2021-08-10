@@ -318,7 +318,7 @@ def test(
 
     APs = {}
     for class_name in _class_names:
-        APs[class_name] = []
+        APs[class_name] = HitMetrics()
 
     for images, labels in dataloader:
         images = images.to(device)
@@ -361,19 +361,21 @@ def test(
                     APs[class_name].append(0.)
                     continue
 
-                shots.nms(nms_iou_thre)
+                shots = shots.nms(nms_iou_thre)
                 hits = []
                 for target in targets:
                     ious = shots.iou(target)
                     hits.append(ious >= _voc_detection_iou_thre)
 
+                hits = np.array(hits).transpose()
+                APs[class_name].add_instance(hits, shots.confs)
                 APs[class_name].append(HitMetrics(
                     np.array(hits).transpose()
                 ).average_precision())
 
     mAP = {}
     for k, v in APs.items():
-        mAP[k] = np.array(v).mean()
+        mAP[k] = v.average_precision()
 
     mAP['total'] = np.mean([v for _, v in mAP.items()])
     return mAP
