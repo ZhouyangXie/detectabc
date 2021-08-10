@@ -19,6 +19,10 @@ class HitMetrics:
         self._num_instances = 0
         self._recalls = []
 
+    def add_skipped_instance(self, num_targets):
+        self._num_instances += 1
+        self._num_targets += num_targets
+
     def add_instance(self, hits, confs):
         '''
         add the predictions for the targets in one instance
@@ -74,27 +78,33 @@ class HitMetrics:
         self._tp_hits = np.concatenate((self._tp_hits, new_tp_hits))
 
     def average_recall(self):
-        if self._num_instances <= 0:
+        if self._num_instances == 0:
             return None
         else:
             return np.array(self._recalls).mean()
 
     def average_precision(self):
+        if self._num_instances == 0:
+            return None
+
+        if len(self._tp_hits) == 0:
+            return 0.0
+
         # sort all hits(across instances) by confidence
-        sorted_hits = self._tp_hits[np.argsort(self._confs)]
+        sorted_hits = self._tp_hits[np.argsort(self._confs)[::-1]]
 
         # compute cumulative precision and recall
         precision = np.cumsum(sorted_hits)/(np.arange(len(sorted_hits)) + 1)
 
         # sample points to compute AUC are the tp hits
-        precisions = precision[self._tp_hits]
-        for i in range(len(precisions)):
-            precisions[i] = precisions[i:].max()
+        sample_point_precisions = precision[sorted_hits]
+        for i in range(len(sample_point_precisions)):
+            sample_point_precisions[i] = sample_point_precisions[i:].max()
 
         # add un-recalled targets
-        num_missed_targets = self._num_targets - self._tp_hits.sum()
+        num_missed_targets = self._num_targets - len(sample_point_precisions)
         precisions = np.concatenate(
-            (precisions, np.zeros(num_missed_targets))
+            (sample_point_precisions, np.zeros(num_missed_targets))
         )
 
         return precisions.mean()

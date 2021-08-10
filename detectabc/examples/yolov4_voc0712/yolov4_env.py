@@ -358,7 +358,7 @@ def test(
 
                 shots = cls_predictions
                 if len(shots) == 0:
-                    APs[class_name].append(0.)
+                    APs[class_name].add_skipped_instance(len(targets))
                     continue
 
                 shots = shots.nms(nms_iou_thre)
@@ -369,9 +369,6 @@ def test(
 
                 hits = np.array(hits).transpose()
                 APs[class_name].add_instance(hits, shots.confs)
-                APs[class_name].append(HitMetrics(
-                    np.array(hits).transpose()
-                ).average_precision())
 
     mAP = {}
     for k, v in APs.items():

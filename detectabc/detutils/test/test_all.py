@@ -1,5 +1,4 @@
 import numpy as np
-from numpy.core.defchararray import array
 
 from detectabc.detutils.metrics import HitMetrics
 from detectabc.detutils.box import BoxArray, DetectBoxArray, LabelBoxArray
@@ -87,10 +86,7 @@ def test_all():
             APs[class_name].add_instance(hits, np.arange(len(hits), 0, -1))
         else:
             # add a false prediction
-            APs[class_name].add_instance(
-                hits=np.zeros((1, len(label[class_name])), bool),
-                confs=np.array([-1, ])
-            )
+            APs[class_name].add_skipped_instance(len(label[class_name]))
 
     assert APs['person'].average_precision() == 1/3
     assert APs['horse'].average_precision() == 0.
