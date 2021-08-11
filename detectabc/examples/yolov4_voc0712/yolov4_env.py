@@ -358,7 +358,11 @@ def test(
 
                 shots = cls_predictions
                 if len(shots) == 0:
+<<<<<<< HEAD
                     APs[class_name].add_skipped_instance(len(targets))
+=======
+                    APs[class_name]._num_targets += len(targets)
+>>>>>>> a97adca88e8551e45fa55658fc93c2e3ac9f7083
                     continue
 
                 shots = shots.nms(nms_iou_thre)
