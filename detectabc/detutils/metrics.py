@@ -13,8 +13,8 @@ class HitMetrics:
         self.empty()
 
     def empty(self):
-        self._confs = np.zeros((0,), dtype=np.float)
-        self._tp_hits = np.zeros((0,), dtype=np.bool)
+        self._confs = np.zeros((0,), dtype=np.float64)
+        self._tp_hits = np.zeros((0,), dtype=np.int64)
         self._num_targets = 0
         self._num_instances = 0
         self._recalls = []
@@ -36,7 +36,7 @@ class HitMetrics:
             confs: np.array dtype=float
             confs[i] is the confidence for the i-th prediction
         '''
-        assert hits.ndim == 2 and hits.dtype == np.bool
+        assert hits.ndim == 2 and hits.dtype == bool
         assert confs.ndim == 1
         assert len(hits) == len(confs)
         confs = confs.astype(np.float64)
@@ -54,22 +54,23 @@ class HitMetrics:
         for i, row in enumerate(hits):
             if row.any():
                 # hit at least one target
-                if has_hit[row].all():
+                num_new_hit_targets = np.sum(~(has_hit[row]))
+                if num_new_hit_targets == 0:
                     # a duplicate hit
                     continue
                 else:
                     # if a new target is hit
-                    valid_tp_hits.append(True)
+                    valid_tp_hits.append(num_new_hit_targets)
             else:
                 # no target is hit, a false positive hit
-                valid_tp_hits.append(False)
+                valid_tp_hits.append(0)
 
             valid_hits_ind.append(i)
             has_hit |= row
 
         # new hits to be added
         new_confs = confs[valid_hits_ind]
-        new_tp_hits = np.array(valid_tp_hits, dtype=np.bool)
+        new_tp_hits = np.array(valid_tp_hits, dtype=np.int64)
 
         self._num_targets += num_targets
         self._num_instances += 1
@@ -91,20 +92,16 @@ class HitMetrics:
             return 0.0
 
         # sort all hits(across instances) by confidence
-        sorted_hits = self._tp_hits[np.argsort(self._confs)[::-1]]
+        hits = self._tp_hits[np.argsort(self._confs)[::-1]]
+        has_hit = hits.astype(bool)
 
         # compute cumulative precision and recall
-        precision = np.cumsum(sorted_hits)/(np.arange(len(sorted_hits)) + 1)
+        precision = np.cumsum(has_hit)/(np.arange(len(has_hit)) + 1)
+        recall_diff = hits/self._num_targets
 
-        # sample points to compute AUC are the tp hits
-        sample_point_precisions = precision[sorted_hits]
-        for i in range(len(sample_point_precisions)):
-            sample_point_precisions[i] = sample_point_precisions[i:].max()
+        precision = precision[has_hit]
+        recall_diff = recall_diff[has_hit]
+        for i in range(len(precision) - 2, -1, -1):
+            precision[i] = max(precision[i], precision[i+1])
 
-        # add un-recalled targets
-        num_missed_targets = self._num_targets - len(sample_point_precisions)
-        precisions = np.concatenate(
-            (sample_point_precisions, np.zeros(num_missed_targets))
-        )
-
-        return precisions.mean()
+        return (precision * recall_diff).sum()

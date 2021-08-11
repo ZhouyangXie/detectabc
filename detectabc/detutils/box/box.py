@@ -193,7 +193,7 @@ class BoxArray(_BoxMixIn):
                         self.xmax[i], self.ymin[i], self.ymax[i])
         elif isinstance(i, (list, np.ndarray, slice)):
             if isinstance(i, list):
-                i = np.array(i, dtype=np.int)
+                i = np.array(i, dtype=np.int64)
             # i is slice-like, such as int array or boolean array
             return BoxArray(self.img_w, self.img_h,
                             self.xmin[i, ], self.xmax[i, ],
