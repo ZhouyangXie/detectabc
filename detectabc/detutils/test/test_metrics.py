@@ -9,7 +9,7 @@ def test_hit_metrics_A():
     hits = np.array([
         [False, False, False],
         [True,  False, False],
-        [True,  False, False],  # will be ignored in AP
+        [True,  False, False],
         [False, False, False],
         [False, False, False],
         [False, True,  False],
@@ -17,7 +17,7 @@ def test_hit_metrics_A():
 
     metrics = HitMetrics()
     metrics.add_instance(hits, np.arange(len(hits), 0, -1))
-    assert metrics.average_precision() == 0.3
+    assert metrics.average_precision() == 5/18
     assert metrics.average_recall() == 2/3
 
 

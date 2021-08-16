@@ -56,8 +56,8 @@ class HitMetrics:
                 # hit at least one target
                 num_new_hit_targets = np.sum(~(has_hit[row]))
                 if num_new_hit_targets == 0:
-                    # a duplicate hit
-                    continue
+                    # a duplicate hit is FP
+                    valid_tp_hits.append(0)
                 else:
                     # if a new target is hit
                     valid_tp_hits.append(num_new_hit_targets)
