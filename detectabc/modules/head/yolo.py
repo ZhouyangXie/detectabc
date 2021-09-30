@@ -239,14 +239,6 @@ class Yolo(ABC):
                 to_numpy(class_conf), to_numpy(objective_conf)
             )
 
-        # convert coordinates to BoxArray
-        pred_boxarr = BoxArray(self.grid_w, self.grid_h,
-                               to_numpy(xmin).reshape(-1),
-                               to_numpy(xmax).reshape(-1),
-                               to_numpy(ymin).reshape(-1),
-                               to_numpy(ymax).reshape(-1))
-        assert len(pred_boxarr) == self.grid_w * self.grid_h * self.num_anchor
-
         # rescale label boxes to fit the output
         labels.rescale_to(self.grid_w, self.grid_h)
 
